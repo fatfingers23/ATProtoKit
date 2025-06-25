@@ -16,6 +16,8 @@ final public class ATProtocolConfiguration: SessionConfiguration {
     public let instanceUUID: UUID
 
     public let pdsURL: String
+  
+    public let userSessionRegistry: any UserSessionRegistry
 
     public let codeStream: AsyncStream<String>
 
@@ -43,11 +45,13 @@ final public class ATProtocolConfiguration: SessionConfiguration {
         pdsURL: String = "https://bsky.social",
         keychainProtocol: Keychain = AppleSecureKeychain(),
         configuration: URLSessionConfiguration = .default,
-        canResolve: Bool = true
+        canResolve: Bool = true,
+        userSessionRegistry: UserSessionRegistry? = nil
     ) {
         self.keychainProtocol = keychainProtocol
         self.instanceUUID = keychainProtocol.identifier
         self.pdsURL = pdsURL
+        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry()
 
         let (stream, continuation) = AsyncStream<String>.makeStream()
         self.codeStream = stream

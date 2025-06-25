@@ -27,6 +27,8 @@ public protocol SessionConfiguration: AnyObject, Sendable {
     /// This URL is used to make network requests to the PDS for various operations, such as
     /// session creation, refresh, and deletion.
     var pdsURL: String { get }
+  
+    var userSessionRegistry: UserSessionRegistry { get }
 
     /// An instance of `URLSessionConfiguration`.
     var configuration: URLSessionConfiguration { get }
@@ -228,7 +230,7 @@ extension SessionConfiguration {
                 try await keychainProtocol.savePassword(password)
             }
 
-            await UserSessionRegistry.shared.register(instanceUUID, session: userSession)
+          await self.userSessionRegistry.register(instanceUUID, session: userSession)
         } catch {
             throw error
         }
@@ -304,7 +306,7 @@ extension SessionConfiguration {
             try await keychainProtocol.saveRefreshToken(response.refreshToken)
             try await keychainProtocol.savePassword(password)
 
-            await UserSessionRegistry.shared.register(instanceUUID, session: userSession)
+            await self.userSessionRegistry.register(instanceUUID, session: userSession)
         } catch {
             throw error
         }
@@ -368,7 +370,7 @@ extension SessionConfiguration {
                 pdsURL: self.pdsURL
             )
 
-          _ = await UserSessionRegistry.shared.register(instanceUUID, session: updatedUserSession)
+            _ = await self.userSessionRegistry.register(instanceUUID, session: updatedUserSession)
         } catch {
             throw error
         }
@@ -394,7 +396,7 @@ extension SessionConfiguration {
 
         do {
             if try SessionToken(sessionToken: refreshToken).payload.expiresAt.addingTimeInterval(10) <= Date() {
-                guard let handle = await UserSessionRegistry.shared.getSession(for: instanceUUID)?.handle else {
+                guard let handle = await self.userSessionRegistry.getSession(for: instanceUUID)?.handle else {
                     // TODO: Create a better error.
                     throw DIDDocument.DIDDocumentError.emptyArray
                 }
@@ -436,7 +438,7 @@ extension SessionConfiguration {
                     status = nil
             }
 
-            let oldUserSession = await UserSessionRegistry.shared.getSession(for: instanceUUID)
+            let oldUserSession = await self.userSessionRegistry.getSession(for: instanceUUID)
 
             let updatedUserSession = UserSession(
                 handle: response.handle,
@@ -454,7 +456,7 @@ extension SessionConfiguration {
           try await keychainProtocol.saveAccessToken(response.accessToken)
           try await keychainProtocol.saveRefreshToken(response.refreshToken)
           
-          _ = await UserSessionRegistry.shared.register(instanceUUID, session: updatedUserSession)
+          _ = await self.userSessionRegistry.register(instanceUUID, session: updatedUserSession)
         } catch {
             throw error
         }
@@ -471,7 +473,7 @@ extension SessionConfiguration {
 
         do {
             if try SessionToken(sessionToken: refreshToken).payload.expiresAt.addingTimeInterval(10) <= Date() {
-                guard let handle = await UserSessionRegistry.shared.getSession(for: instanceUUID)?.handle else {
+              guard let handle = await self.userSessionRegistry.getSession(for: instanceUUID)?.handle else {
                     // TODO: Create a better error.
                     throw DIDDocument.DIDDocumentError.emptyArray
                 }
@@ -491,7 +493,7 @@ extension SessionConfiguration {
                 refreshToken: refreshToken
             )
 
-            await UserSessionRegistry.shared.removeSession(for: instanceUUID)
+            await self.userSessionRegistry.removeSession(for: instanceUUID)
         } catch {
             throw error
         }

@@ -19,6 +19,8 @@ public protocol ATProtoKitConfiguration {
 
     /// Represents an object used for managing sessions.
     var sessionConfiguration: SessionConfiguration? { get }
+    
+    var userSessionRegistry: UserSessionRegistry { get }
 
     /// Prepares an authorization value for API requests based on `session`.
     ///
@@ -83,7 +85,7 @@ extension ATProtoKitConfiguration {
     /// or `nil` (if it doesn't).
     public func getUserSession() async throws -> UserSession? {
         guard let sessionConfiguration = sessionConfiguration else { return nil }
-        let userSession = await UserSessionRegistry.shared.getSession(for: sessionConfiguration.instanceUUID)
+      let userSession = await self.userSessionRegistry.getSession(for: sessionConfiguration.instanceUUID)
         return userSession
     }
 
@@ -143,6 +145,8 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
 
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
+  
+    public var userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
@@ -183,10 +187,12 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
         sessionConfiguration: SessionConfiguration? = nil,
         apiClientConfiguration: APIClientConfiguration? = nil,
         pdsURL: String = APIHostname.bskyAppView,
-        canUseBlueskyRecords: Bool = true
+        canUseBlueskyRecords: Bool = true,
+        userSessionRegistry: UserSessionRegistry? = nil
     ) {
         self.sessionConfiguration = sessionConfiguration
         self.pdsURL = !pdsURL.isEmpty ? pdsURL : APIHostname.bskyAppView
+        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
 
         var finalConfiguration = apiClientConfiguration ?? APIClientConfiguration()
         finalConfiguration.urlSessionConfiguration = apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration ?? .default
@@ -228,11 +234,13 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
         sessionConfiguration: SessionConfiguration? = nil,
         apiClientConfiguration: APIClientConfiguration? = nil,
         pdsURL: String = APIHostname.bskyAppView,
-        canUseBlueskyRecords: Bool = true
+        canUseBlueskyRecords: Bool = true,
+        userSessionRegistry: UserSessionRegistry? = nil
     ) async {
         self.sessionConfiguration = sessionConfiguration
         self.pdsURL = !pdsURL.isEmpty ? pdsURL : APIHostname.bskyAppView
-
+        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
+      
         var finalConfiguration = apiClientConfiguration ?? APIClientConfiguration()
         finalConfiguration.urlSessionConfiguration = apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration ?? .default
 
@@ -260,6 +268,8 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
 
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
+    
+    public var userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
@@ -272,11 +282,12 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
     ///   - atProtoKitInstance: Represents the instance of ``ATProtoKit/ATProtoKit``.
     ///   - linkbuilder: The ``ATLinkBuilder`` object used to grab the metadata for preview
     ///   link cards. Optional.
-    public init(atProtoKitInstance: ATProtoKit, linkbuilder: ATLinkBuilder? = nil) {
+    public init(atProtoKitInstance: ATProtoKit, linkbuilder: ATLinkBuilder? = nil, userSessionRegistry: UserSessionRegistry? = nil) {
         self.atProtoKitInstance = atProtoKitInstance
         self.sessionConfiguration = atProtoKitInstance.sessionConfiguration
         self.linkBuilder = linkbuilder
         self.pdsURL = "https://public.api.bsky.app"
+        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
     }
 }
 
@@ -290,6 +301,8 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
 public final class ATProtoBlueskyChat: Sendable, ATProtoKitConfiguration {
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
+  
+    public var userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
@@ -307,10 +320,11 @@ public final class ATProtoBlueskyChat: Sendable, ATProtoKitConfiguration {
     /// - Parameters:
     ///   - atProtoKitInstance: Represents the instance of ``ATProtoKit/ATProtoKit``.
     ///   Defaults to the project's `CFBundleIdentifier`.
-    public init(atProtoKitInstance: ATProtoKit) {
+    public init(atProtoKitInstance: ATProtoKit, userSessionRegistry: UserSessionRegistry? = nil) {
         self.atProtoKitInstance = atProtoKitInstance
         self.sessionConfiguration = atProtoKitInstance.sessionConfiguration
         self.pdsURL = "https://api.bsky.chat"
+        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
     }
 }
 
@@ -344,6 +358,8 @@ public final class ATProtoAdmin: Sendable, ATProtoKitConfiguration {
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
 
+    public var userSessionRegistry: any UserSessionRegistry
+
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
 
@@ -356,10 +372,12 @@ public final class ATProtoAdmin: Sendable, ATProtoKitConfiguration {
     ///   - sessionConfiguration: The authenticated user session within the AT Protocol. Optional.
     ///   Defaults to the project's `CFBundleIdentifier`.
     ///   - apiClientConfiguration: An ``APIClientConfiguration`` object. Optional. Defaults to `nil`.
-    public init(sessionConfiguration: SessionConfiguration? = nil, apiClientConfiguration: APIClientConfiguration? = nil) async {
+  public init(sessionConfiguration: SessionConfiguration? = nil, apiClientConfiguration: APIClientConfiguration? = nil, userSessionRegistry: UserSessionRegistry? = nil) async {
         self.sessionConfiguration = sessionConfiguration
 
         self.pdsURL = "https://api.bsky.app"
+    
+        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
 
         var finalConfiguration = apiClientConfiguration ?? APIClientConfiguration()
         finalConfiguration.urlSessionConfiguration = apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration ?? .default
