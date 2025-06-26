@@ -17,20 +17,20 @@ import Foundation
 /// to a session in a decoupled manner.
 
 public protocol UserSessionRegistry {
-  
+
   /// Registers a new user session with a unique `UUID`.
   ///
   /// - Parameters:
   ///   - id: The unique identifier for the session.
   ///   - session: The `UserSession` to be stored.
   func register(_ id: UUID, session: UserSession) async
-  
+
   /// Retrieves a user session by its `UUID`.
   ///
   /// - Parameter id: The UUID associated with the session.
   /// - Returns: The `UserSession` if it exists, or `nil` if it doesn't.
   func getSession(for id: UUID) async -> UserSession?
-  
+
   /// Checks whether a session exists for the given UUID.
   ///
   /// - Parameter id: The UUID to check for.
@@ -44,57 +44,64 @@ public protocol UserSessionRegistry {
 
   /// Removes all user sessions from the registry.
   func removeAllSessions() async
-  
+
+  /// Get's all the sessions from the registry.
+  func getAllSessions() async -> [UUID: UserSession]
+
 }
 
-
 /// A default `UserSessionRegistry` that manages `UserSession` instances, keyed by `UUID`.
-public actor InMemoryUserSessionRegistry: UserSessionRegistry {
+public actor InMemoryUserSessionRegistry: UserSessionRegistry, Sendable {
+  public init() {
+    self.sessions = [:]
+  }
 
-    public init() {
-      self.sessions = [:]
-    }
-  
-    /// A singleton instance of `InMemoryUserSessionRegistry`.
-    public static var shared = InMemoryUserSessionRegistry()
+  /// A singleton instance of `InMemoryUserSessionRegistry`.
+  public static var shared = InMemoryUserSessionRegistry()
 
-    /// The internal registry of user sessions.
-    private var sessions: [UUID: UserSession] = [:]
+  /// The internal registry of user sessions.
+  private var sessions: [UUID: UserSession] = [:]
 
-    /// Registers a new user session with a unique `UUID`.
-    ///
-    /// - Parameters:
-    ///   - id: The unique identifier for the session.
-    ///   - session: The `UserSession` to be stored.
-    public func register(_ id: UUID, session: UserSession) async {
-        sessions[id] = session
-    }
+  /// Registers a new user session with a unique `UUID`.
+  ///
+  /// - Parameters:
+  ///   - id: The unique identifier for the session.
+  ///   - session: The `UserSession` to be stored.
+  public func register(_ id: UUID, session: UserSession) async {
+    sessions[id] = session
+  }
 
-    /// Retrieves a user session by its `UUID`.
-    ///
-    /// - Parameter id: The UUID associated with the session.
-    /// - Returns: The `UserSession` if it exists, or `nil` if it doesn't.
-    public func getSession(for id: UUID) async -> UserSession? {
-        return sessions[id]
-    }
+  /// Retrieves a user session by its `UUID`.
+  ///
+  /// - Parameter id: The UUID associated with the session.
+  /// - Returns: The `UserSession` if it exists, or `nil` if it doesn't.
+  public func getSession(for id: UUID) async -> UserSession? {
+    return sessions[id]
+  }
 
-    /// Checks whether a session exists for the given UUID.
-    ///
-    /// - Parameter id: The UUID to check for.
-    /// - Returns: `true` if the session exists, or `false` if not.
-    public func containsSession(for id: UUID) async -> Bool {
-        return sessions.keys.contains(id)
-    }
+  /// Checks whether a session exists for the given UUID.
+  ///
+  /// - Parameter id: The UUID to check for.
+  /// - Returns: `true` if the session exists, or `false` if not.
+  public func containsSession(for id: UUID) async -> Bool {
+    return sessions.keys.contains(id)
+  }
 
-    /// Removes a specific user session by UUID.
-    ///
-    /// - Parameter id: The UUID of the session to remove.
-    public func removeSession(for id: UUID) async {
-        sessions.removeValue(forKey: id)
-    }
+  /// Removes a specific user session by UUID.
+  ///
+  /// - Parameter id: The UUID of the session to remove.
+  public func removeSession(for id: UUID) async {
+    sessions.removeValue(forKey: id)
+  }
 
-    /// Removes all user sessions from the registry.
-    public func removeAllSessions() async {
-        sessions.removeAll()
-    }
+  /// Removes all user sessions from the registry.
+  public func removeAllSessions() async {
+    sessions.removeAll()
+  }
+
+  /// Returns all the user sessions
+  public func getAllSessions() async -> [UUID: UserSession] {
+    return sessions
+  }
+
 }
