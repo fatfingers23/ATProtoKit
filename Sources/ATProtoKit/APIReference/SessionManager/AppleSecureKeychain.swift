@@ -50,6 +50,8 @@ public actor AppleSecureKeychain: SecureKeychainProtocol {
 
     /// The key for the refresh token.
     private var refreshTokenKey: String { "\(identifier.uuidString).refreshToken" }
+  
+    private var accessTokenKey: String { "\(identifier.uuidString).accessToken" }
 
     /// The key for the password.
     private var passwordKey: String { "\(identifier.uuidString).password" }
@@ -60,11 +62,12 @@ public actor AppleSecureKeychain: SecureKeychainProtocol {
     ///
     /// - Throws:
     public func retrieveAccessToken() async throws -> String {
-        guard let cachedAccessToken = cachedAccessToken else {
-            throw ApplSecureKeychainError.accessTokenNotFound
+        if let cachedAccessToken = cachedAccessToken {
+            return cachedAccessToken
         }
-
-        return cachedAccessToken
+        let token = try await readItem(forKey: accessTokenKey)
+        cachedAccessToken = token
+        return token
     }
 
     /// Saves the user account's access token in-memory.
@@ -74,6 +77,7 @@ public actor AppleSecureKeychain: SecureKeychainProtocol {
     /// - Throws:
     public func saveAccessToken(_ accessToken: String) async throws {
         cachedAccessToken = accessToken
+        try await saveOrUpdateItem(accessToken, forKey: accessTokenKey)
     }
 
     /// Deletes the access token.

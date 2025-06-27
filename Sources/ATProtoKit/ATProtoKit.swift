@@ -19,7 +19,7 @@ public protocol ATProtoKitConfiguration {
 
     /// Represents an object used for managing sessions.
     var sessionConfiguration: SessionConfiguration? { get }
-    
+
     var userSessionRegistry: UserSessionRegistry { get }
 
     /// Prepares an authorization value for API requests based on `session`.
@@ -85,7 +85,8 @@ extension ATProtoKitConfiguration {
     /// or `nil` (if it doesn't).
     public func getUserSession() async throws -> UserSession? {
         guard let sessionConfiguration = sessionConfiguration else { return nil }
-      let userSession = await self.userSessionRegistry.getSession(for: sessionConfiguration.instanceUUID)
+        let userSession = await self.userSessionRegistry.getSession(
+            for: sessionConfiguration.instanceUUID)
         return userSession
     }
 
@@ -135,27 +136,32 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
     ///
     /// If `canUseBlueskyRecords` is set to `false`, these will not be used.
     public let recordLexicons: [any ATRecordProtocol.Type] = [
-        AppBskyLexicon.Actor.ProfileRecord.self, AppBskyLexicon.Actor.StatusRecord.self, AppBskyLexicon.Feed.GeneratorRecord.self,
-        AppBskyLexicon.Feed.LikeRecord.self, AppBskyLexicon.Feed.PostRecord.self, AppBskyLexicon.Feed.PostgateRecord.self,
-        AppBskyLexicon.Feed.RepostRecord.self, AppBskyLexicon.Feed.ThreadgateRecord.self, AppBskyLexicon.Graph.BlockRecord.self,
-        AppBskyLexicon.Graph.FollowRecord.self, AppBskyLexicon.Graph.ListRecord.self, AppBskyLexicon.Graph.ListBlockRecord.self,
-        AppBskyLexicon.Graph.ListItemRecord.self, AppBskyLexicon.Graph.StarterpackRecord.self, AppBskyLexicon.Labeler.ServiceRecord.self,
-        ChatBskyLexicon.Actor.DeclarationRecord.self
+        AppBskyLexicon.Actor.ProfileRecord.self, AppBskyLexicon.Actor.StatusRecord.self,
+        AppBskyLexicon.Feed.GeneratorRecord.self,
+        AppBskyLexicon.Feed.LikeRecord.self, AppBskyLexicon.Feed.PostRecord.self,
+        AppBskyLexicon.Feed.PostgateRecord.self,
+        AppBskyLexicon.Feed.RepostRecord.self, AppBskyLexicon.Feed.ThreadgateRecord.self,
+        AppBskyLexicon.Graph.BlockRecord.self,
+        AppBskyLexicon.Graph.FollowRecord.self, AppBskyLexicon.Graph.ListRecord.self,
+        AppBskyLexicon.Graph.ListBlockRecord.self,
+        AppBskyLexicon.Graph.ListItemRecord.self, AppBskyLexicon.Graph.StarterpackRecord.self,
+        AppBskyLexicon.Labeler.ServiceRecord.self,
+        ChatBskyLexicon.Actor.DeclarationRecord.self,
     ]
 
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
-  
+
     public var userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
-    
+
     /// An instance of ``APIClientService`` to perform requests.
     public let apiClientService: APIClientService
 
     /// Initializes a new instance of `ATProtoKit`.
-    /// 
+    ///
     /// This will also handle some of the logging-related setup. The identifier will either be your
     /// project's `CFBundleIdentifier` or an identifier named
     /// `com.cjrriley.ATProtoKit`. However, you can manually override this.
@@ -182,7 +188,11 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
     ///   - pdsURL: The URL of the Personal Data Server (PDS). Defaults to ``APIHostname/bskyAppView``.
     ///   - canUseBlueskyRecords: Indicates whether Bluesky's lexicons should be used.
     ///   Defaults to `true`.
-    @available(*, deprecated, message: "Use the async version of this initializer instead. The non-async initializer will be removed in version 0.30.0.")
+    @available(
+        *, deprecated,
+        message:
+            "Use the async version of this initializer instead. The non-async initializer will be removed in version 0.30.0."
+    )
     public init(
         sessionConfiguration: SessionConfiguration? = nil,
         apiClientConfiguration: APIClientConfiguration? = nil,
@@ -195,7 +205,9 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
         self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
 
         var finalConfiguration = apiClientConfiguration ?? APIClientConfiguration()
-        finalConfiguration.urlSessionConfiguration = apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration ?? .default
+        finalConfiguration.urlSessionConfiguration =
+            apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration
+            ?? .default
 
         self.apiClientService = APIClientService(
             with: finalConfiguration
@@ -240,14 +252,16 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
         self.sessionConfiguration = sessionConfiguration
         self.pdsURL = !pdsURL.isEmpty ? pdsURL : APIHostname.bskyAppView
         self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
-      
+
         var finalConfiguration = apiClientConfiguration ?? APIClientConfiguration()
-        finalConfiguration.urlSessionConfiguration = apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration ?? .default
+        finalConfiguration.urlSessionConfiguration =
+            apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration
+            ?? .default
 
         self.apiClientService = APIClientService(
             with: finalConfiguration
         )
-        
+
         if canUseBlueskyRecords && !(ATRecordTypeRegistry.areBlueskyRecordsRegistered) {
             _ = await ATRecordTypeRegistry.shared.register(blueskyLexiconTypes: recordLexicons)
         }
@@ -268,7 +282,7 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
 
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
-    
+
     public var userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
@@ -282,7 +296,10 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
     ///   - atProtoKitInstance: Represents the instance of ``ATProtoKit/ATProtoKit``.
     ///   - linkbuilder: The ``ATLinkBuilder`` object used to grab the metadata for preview
     ///   link cards. Optional.
-    public init(atProtoKitInstance: ATProtoKit, linkbuilder: ATLinkBuilder? = nil, userSessionRegistry: UserSessionRegistry? = nil) {
+    public init(
+        atProtoKitInstance: ATProtoKit, linkbuilder: ATLinkBuilder? = nil,
+        userSessionRegistry: UserSessionRegistry? = nil
+    ) {
         self.atProtoKitInstance = atProtoKitInstance
         self.sessionConfiguration = atProtoKitInstance.sessionConfiguration
         self.linkBuilder = linkbuilder
@@ -301,7 +318,7 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
 public final class ATProtoBlueskyChat: Sendable, ATProtoKitConfiguration {
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
-  
+
     public var userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
@@ -309,7 +326,7 @@ public final class ATProtoBlueskyChat: Sendable, ATProtoKitConfiguration {
 
     /// Represents the instance of ``ATProtoKit/ATProtoKit``.
     internal let atProtoKitInstance: ATProtoKit
-    
+
     /// The instance of ``APIClientService`` in  ``atProtoKitInstance``
     internal var apiClientService: APIClientService {
         atProtoKitInstance.apiClientService
@@ -372,15 +389,21 @@ public final class ATProtoAdmin: Sendable, ATProtoKitConfiguration {
     ///   - sessionConfiguration: The authenticated user session within the AT Protocol. Optional.
     ///   Defaults to the project's `CFBundleIdentifier`.
     ///   - apiClientConfiguration: An ``APIClientConfiguration`` object. Optional. Defaults to `nil`.
-  public init(sessionConfiguration: SessionConfiguration? = nil, apiClientConfiguration: APIClientConfiguration? = nil, userSessionRegistry: UserSessionRegistry? = nil) async {
+    public init(
+        sessionConfiguration: SessionConfiguration? = nil,
+        apiClientConfiguration: APIClientConfiguration? = nil,
+        userSessionRegistry: UserSessionRegistry? = nil
+    ) async {
         self.sessionConfiguration = sessionConfiguration
 
         self.pdsURL = "https://api.bsky.app"
-    
+
         self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
 
         var finalConfiguration = apiClientConfiguration ?? APIClientConfiguration()
-        finalConfiguration.urlSessionConfiguration = apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration ?? .default
+        finalConfiguration.urlSessionConfiguration =
+            apiClientConfiguration?.urlSessionConfiguration ?? sessionConfiguration?.configuration
+            ?? .default
 
         self.apiClientService = APIClientService(
             with: finalConfiguration

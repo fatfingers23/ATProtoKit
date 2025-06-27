@@ -416,14 +416,13 @@ extension SessionConfiguration {
                 refreshToken: refreshToken
             )
 
-            guard let convertedDIDDocument = self.convertDIDDocument(response.didDocument) else {
-                throw DIDDocument.DIDDocumentError.emptyArray
-            }
+//            guard let convertedDIDDocument = self.convertDIDDocument(response.didDocument) else {
+//                throw DIDDocument.DIDDocumentError.emptyArray
+//            }
 
-            let didDocument = convertedDIDDocument
 
-            let atService = try didDocument.checkServiceForATProto()
-            let serviceEndpoint = atService.serviceEndpoint
+//            let atService = try didDocument.checkServiceForATProto()
+//            let serviceEndpoint = atService.serviceEndpoint
 
             var status: UserAccountStatus? = nil
 
@@ -446,10 +445,10 @@ extension SessionConfiguration {
                 email: oldUserSession?.email,
                 isEmailConfirmed: oldUserSession?.isEmailConfirmed,
                 isEmailAuthenticationFactorEnabled: oldUserSession?.isEmailAuthenticationFactorEnabled,
-                didDocument: didDocument,
+                didDocument: nil,
                 isActive: response.isActive,
                 status: status,
-                serviceEndpoint: serviceEndpoint,
+                serviceEndpoint: URL(string: self.pdsURL)!,
                 pdsURL: self.pdsURL
             )
 
