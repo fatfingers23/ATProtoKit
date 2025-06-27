@@ -429,10 +429,6 @@ extension SessionConfiguration {
 
             let convertedDIDDocument = self.convertDIDDocument(response.didDocument)
 
-
-            let atService = try didDocument?.checkServiceForATProto()
-            let serviceEndpoint = atService?.serviceEndpoint
-
             var status: UserAccountStatus? = nil
 
             switch response.status {
@@ -457,7 +453,7 @@ extension SessionConfiguration {
                 didDocument: nil,
                 isActive: response.isActive,
                 status: status,
-                serviceEndpoint: serviceEndpoint ?? _pdsURL,
+                serviceEndpoint:  _pdsURL,
                 pdsURL: self.pdsURL
             )
 
