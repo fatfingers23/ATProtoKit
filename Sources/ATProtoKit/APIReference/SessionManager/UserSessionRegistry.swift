@@ -16,7 +16,7 @@ import Foundation
 /// Even without that sort of use case, this allows for any part of ATProtoKit to gain access
 /// to a session in a decoupled manner.
 
-public protocol UserSessionRegistry {
+public protocol UserSessionRegistry: Sendable {
 
     /// Registers a new user session with a unique `UUID`.
     ///

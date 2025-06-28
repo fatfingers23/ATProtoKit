@@ -97,7 +97,7 @@ public struct DIDDocument: Sendable, Codable {
 
     /// An array of context URLs for the DID document, providing additional semantics for
     /// the properties.
-    public let context: [String]
+    public let context: [String]?
 
     /// The unique identifier of the DID document.
     public let id: String

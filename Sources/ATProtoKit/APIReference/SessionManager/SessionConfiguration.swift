@@ -450,7 +450,7 @@ extension SessionConfiguration {
                 email: oldUserSession?.email,
                 isEmailConfirmed: oldUserSession?.isEmailConfirmed,
                 isEmailAuthenticationFactorEnabled: oldUserSession?.isEmailAuthenticationFactorEnabled,
-                didDocument: nil,
+                didDocument: convertedDIDDocument,
                 isActive: response.isActive,
                 status: status,
                 serviceEndpoint:  _pdsURL,

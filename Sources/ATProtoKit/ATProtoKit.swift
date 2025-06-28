@@ -155,7 +155,7 @@ public final class ATProtoKit: Sendable, ATProtoKitConfiguration, ATRecordConfig
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
 
-    public var userSessionRegistry: any UserSessionRegistry
+    public let userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
@@ -286,7 +286,7 @@ public final class ATProtoBluesky: Sendable, ATProtoKitConfiguration {
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
 
-    public var userSessionRegistry: any UserSessionRegistry
+    public let userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
@@ -322,7 +322,7 @@ public final class ATProtoBlueskyChat: Sendable, ATProtoKitConfiguration {
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
 
-    public var userSessionRegistry: any UserSessionRegistry
+    public let userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
@@ -378,7 +378,7 @@ public final class ATProtoAdmin: Sendable, ATProtoKitConfiguration {
     /// Represents an object used for managing sessions.
     public let sessionConfiguration: SessionConfiguration?
 
-    public var userSessionRegistry: any UserSessionRegistry
+    public let userSessionRegistry: any UserSessionRegistry
 
     /// The URL of the Personal Data Server (PDS).
     public let pdsURL: String
