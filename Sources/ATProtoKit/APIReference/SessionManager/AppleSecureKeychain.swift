@@ -87,7 +87,8 @@ public actor AppleSecureKeychain: SecureKeychainProtocol {
     ///
     /// - Throws:
     public func deleteAccessToken() async throws {
-        cachedAccessToken = nil
+      try await deleteItem(forKey: accessTokenKey)
+      cachedAccessToken = nil
     }
 
     /// Retrieves the user account's refresh token.
