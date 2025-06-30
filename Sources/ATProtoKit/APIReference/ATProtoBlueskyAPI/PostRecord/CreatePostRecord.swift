@@ -6,8 +6,9 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 extension ATProtoBluesky {
@@ -280,25 +281,28 @@ extension ATProtoBluesky {
             throw ATRequestPrepareError.invalidPDS
         }
 
-        var facets = await ATFacetParser.parseFacets(from: text, pdsURL: session.pdsURL ?? "https://bsky.social")
+        var facets = await ATFacetParser.parseFacets(
+            from: text, pdsURL: session.pdsURL ?? "https://bsky.social")
         if let inlineFacets {
             for (url, start, end) in inlineFacets {
                 do {
-                    let facet = try await ATFacetParser.createInlineLink(url: url, start: start, end: end)
+                    let facet = try await ATFacetParser.createInlineLink(
+                        url: url, start: start, end: end)
                     facets.append(facet)
                 } catch {
                     print("Failed to create inline link: \(error.localizedDescription)")
                 }
             }
         }
-        
+
         // Replace hyperlinks in text and update their facet ranges
         let (resolvedText, updatedLinkFacets) = ATFacetParser.truncateAndReplaceLinks(in: text)
-        
+
         // If we have any new URLs that have been updated, modify their facets to their new size
         for (url, start, end) in updatedLinkFacets {
             do {
-                let updatedFacet = try await ATFacetParser.createInlineLink(url: url, start: start, end: end)
+                let updatedFacet = try await ATFacetParser.createInlineLink(
+                    url: url, start: start, end: end)
 
                 // Remove any existing link facet with the same URL
                 facets.removeAll {
@@ -315,7 +319,7 @@ extension ATProtoBluesky {
                 print("Failed to create updated inline link facet: \(error)")
             }
         }
-        
+
         // Truncate the number of characters to 300.
         let postText = resolvedText.truncated(toLength: 300)
 
@@ -323,10 +327,12 @@ extension ATProtoBluesky {
         // Validate the reply reference if provided.
         var resolvedReplyTo: AppBskyLexicon.Feed.PostRecord.ReplyReference? = nil
         if let replyReference = replyTo {
-            let isValid = await ATProtoTools().isValidReplyReference(replyReference, session: session)
+            let isValid = await ATProtoTools().isValidReplyReference(
+                replyReference, session: session)
 
             guard isValid else {
-                throw ATProtoBlueskyError.invalidReplyReference(message: "The reply reference could not be validated.")
+                throw ATProtoBlueskyError.invalidReplyReference(
+                    message: "The reply reference could not be validated.")
             }
 
             resolvedReplyTo = replyReference
@@ -335,9 +341,12 @@ extension ATProtoBluesky {
         // Locales
         let localeIdentifiers: [String]?
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
-            localeIdentifiers = locales.isEmpty ? nil : locales.compactMap {
-                $0.language.languageCode?.identifier
-            }
+            localeIdentifiers =
+                locales.isEmpty
+                ? nil
+                : locales.compactMap {
+                    $0.language.languageCode?.identifier
+                }
         } else {
             localeIdentifiers = locales.isEmpty ? nil : locales.compactMap { $0.languageCode }
         }
@@ -368,10 +377,11 @@ extension ATProtoBluesky {
                         case .record(let record):
                             resolvedEmbed = try await addQuotePostToEmbed(record)
                         case .recordWithMedia(let record, let media):
-                            let recordWithMediaDefinition = AppBskyLexicon.Embed.RecordWithMediaDefinition(
-                                record: record,
-                                media: media
-                            )
+                            let recordWithMediaDefinition = AppBskyLexicon.Embed
+                                .RecordWithMediaDefinition(
+                                    record: record,
+                                    media: media
+                                )
 
                             resolvedEmbed = .recordWithMedia(recordWithMediaDefinition)
                         case .video(let video, let captions, let altText, let aspectRatio):
@@ -437,7 +447,7 @@ extension ATProtoBluesky {
             throw error
         }
     }
-    
+
     /// Uploads images to the AT Protocol for attaching to a record at a later request.
     ///
     /// - Parameters:
@@ -449,15 +459,17 @@ extension ATProtoBluesky {
     /// ``AppBskyLexicon/Embed/ImagesDefinition``s for use in a record.
     ///
     /// - Important: Each image can only be 1 MB in size.
-    public func uploadImages(_ images: [ATProtoTools.ImageQuery], pdsURL: String = "https://bsky.social",
-                             accessToken: String) async throws -> AppBskyLexicon.Feed.PostRecord.EmbedUnion {
+    public func uploadImages(
+        _ images: [ATProtoTools.ImageQuery], pdsURL: String = "https://bsky.social",
+        accessToken: String
+    ) async throws -> AppBskyLexicon.Feed.PostRecord.EmbedUnion {
         var embedImages = [AppBskyLexicon.Embed.ImagesDefinition.Image]()
 
         for image in images {
             // Check if the image is too large.
-            guard image.imageData.count <= 1_000_000 else {
-                throw ATBlueskyError.imageTooLarge
-            }
+            //            guard image.imageData.count <= 1_000_000 else {
+            //                throw ATBlueskyError.imageTooLarge
+            //            }
 
             // Upload the image, then get the server response.
             let blobReference = try await ATProtoKit(canUseBlueskyRecords: false).uploadBlob(
@@ -518,15 +530,18 @@ extension ATProtoBluesky {
     /// - Throws: Errors related to whether the video or caption file doesn't match the video file
     /// requirements, whether the files failed to upload, or whether anything related to the
     /// AT Protocol.
-    public func buildVideo(_ video: Data, with captions: [Caption]? = nil, altText: String? = nil,
-                           aspectRatio: AppBskyLexicon.Embed.AspectRatioDefinition? = nil, pollingFrequency: Int = 3, pdsURL: String = "https://bsky.social",
-                           accessToken: String) async throws -> AppBskyLexicon.Feed.PostRecord.EmbedUnion {
+    public func buildVideo(
+        _ video: Data, with captions: [Caption]? = nil, altText: String? = nil,
+        aspectRatio: AppBskyLexicon.Embed.AspectRatioDefinition? = nil, pollingFrequency: Int = 3,
+        pdsURL: String = "https://bsky.social",
+        accessToken: String
+    ) async throws -> AppBskyLexicon.Feed.PostRecord.EmbedUnion {
         // Check if the size of the video is small enough.
-        let sizeLimit = 100 * 1024 * 1024 // 100MB in bytes
+        let sizeLimit = 100 * 1024 * 1024  // 100MB in bytes
         if video.count >= sizeLimit {
-            throw ATJobStatusError.videoSizeTooLarge(message: "The video file is too large. The maximum file size is currently 100MB.")
+            throw ATJobStatusError.videoSizeTooLarge(
+                message: "The video file is too large. The maximum file size is currently 100MB.")
         }
-
 
         var videoBlob: ComAtprotoLexicon.Repository.UploadBlobOutput? = nil
         var captionReferences: [AppBskyLexicon.Embed.VideoDefinition.Caption] = []
@@ -538,36 +553,41 @@ extension ATProtoBluesky {
             let uploadLimitInformation = try await atProtoKitInstance.getUploadLimits()
 
             if uploadLimitInformation.canUpload == false {
-                throw ATJobStatusError.permissionToUploadVideosDenied(message: "User account does not have permission to upload videos.")
+                throw ATJobStatusError.permissionToUploadVideosDenied(
+                    message: "User account does not have permission to upload videos.")
             }
 
-            if let remainingVideos = uploadLimitInformation.remainingDailyVideos, let remainingBytes = uploadLimitInformation.remainingDailyBytes {
+            if let remainingVideos = uploadLimitInformation.remainingDailyVideos,
+                let remainingBytes = uploadLimitInformation.remainingDailyBytes
+            {
                 if remainingVideos == 0 || remainingBytes == 0 {
-                    throw ATJobStatusError.videoLimitExceeded(message: "User account has reached the maximum number of videos they can upload.")
+                    throw ATJobStatusError.videoLimitExceeded(
+                        message:
+                            "User account has reached the maximum number of videos they can upload."
+                    )
                 }
             }
         } catch {
             throw error
         }
 
-
         // Upload the video and start the process.
         do {
             videoJobStatus = try await atProtoKitInstance.uploadVideo(video)
         } catch let uploadVideoError as ATAPIError {
             switch uploadVideoError {
-                case .unauthorized(error: let error, wwwAuthenticate: let wwwAuthenticate):
+                case .unauthorized(let error, let wwwAuthenticate):
                     throw ATAPIError.unauthorized(error: error, wwwAuthenticate: wwwAuthenticate)
-                case .badRequest(error: let error),
-                     .forbidden(error: let error),
-                     .notFound(error: let error),
-                     .methodNotAllowed(error: let error),
-                     .payloadTooLarge(error: let error),
-                     .upgradeRequired(error: let error),
-                     .internalServerError(error: let error),
-                     .methodNotImplemented(error: let error):
+                case .badRequest(let error),
+                    .forbidden(let error),
+                    .notFound(let error),
+                    .methodNotAllowed(let error),
+                    .payloadTooLarge(let error),
+                    .upgradeRequired(let error),
+                    .internalServerError(let error),
+                    .methodNotImplemented(let error):
                     throw error
-                case .tooManyRequests(error: let error, retryAfter: let retryAfter):
+                case .tooManyRequests(let error, let retryAfter):
                     throw ATAPIError.tooManyRequests(error: error, retryAfter: retryAfter)
                 case .badGateway:
                     throw ATAPIError.badGateway
@@ -575,15 +595,19 @@ extension ATProtoBluesky {
                     throw ATAPIError.serviceUnavailable
                 case .gatewayTimeout:
                     throw ATAPIError.gatewayTimeout
-                case .unknown(error: let error, errorCode: let errorCode, errorData: let errorData, httpHeaders: let httpHeaders):
-                    throw ATAPIError.unknown(error: error, errorCode: errorCode, errorData: errorData, httpHeaders: httpHeaders)
+                case .unknown(let error, let errorCode, let errorData, let httpHeaders):
+                    throw ATAPIError.unknown(
+                        error: error, errorCode: errorCode, errorData: errorData,
+                        httpHeaders: httpHeaders)
             }
         } catch let uploadVideoError as ATJobStatusError {
             switch uploadVideoError {
-                case .failedJob(error: let error):
+                case .failedJob(let error):
                     if error.error == "already_exists" {
                         do {
-                            videoJobStatus = try await atProtoKitInstance.getJobStatus(from: error.jobID).jobStatus
+                            videoJobStatus = try await atProtoKitInstance.getJobStatus(
+                                from: error.jobID
+                            ).jobStatus
                         } catch {
                             throw error
                         }
@@ -634,7 +658,9 @@ extension ATProtoBluesky {
                     imageData: caption.file
                 )
 
-                captionReferences.append(AppBskyLexicon.Embed.VideoDefinition.Caption(language: caption.language.identifier, fileBlob: blobReference.blob))
+                captionReferences.append(
+                    AppBskyLexicon.Embed.VideoDefinition.Caption(
+                        language: caption.language.identifier, fileBlob: blobReference.blob))
             }
         }
 
@@ -670,8 +696,9 @@ extension ATProtoBluesky {
         // Attempt to load the thumbnail image, if provided.
         let image: Data? = {
             guard let thumbnailImageURL,
-                  let data = try? Data(contentsOf: thumbnailImageURL),
-                  data.count <= 1_000_000 else { return nil }
+                let data = try? Data(contentsOf: thumbnailImageURL),
+                data.count <= 1_000_000
+            else { return nil }
             return data
         }()
 
@@ -697,7 +724,6 @@ extension ATProtoBluesky {
             thumbnailImage = nil
         }
 
-
         let embedExternal = AppBskyLexicon.Embed.ExternalDefinition(
             external: AppBskyLexicon.Embed.ExternalDefinition.External(
                 uri: url,
@@ -717,16 +743,19 @@ extension ATProtoBluesky {
     ///
     /// - Throws: An ``ATProtoError``-conforming error type, depending on the issue. Go to
     /// ``ATAPIError`` and ``ATRequestPrepareError`` for more details.
-    public func addQuotePostToEmbed(_ strongReference: ComAtprotoLexicon.Repository.StrongReference) async throws -> AppBskyLexicon.Feed.PostRecord.EmbedUnion {
+    public func addQuotePostToEmbed(_ strongReference: ComAtprotoLexicon.Repository.StrongReference)
+        async throws -> AppBskyLexicon.Feed.PostRecord.EmbedUnion
+    {
         let record = try await ATProtoTools().fetchRecordForURI(strongReference.recordURI)
-        let reference = ComAtprotoLexicon.Repository.StrongReference(recordURI: record.uri, cidHash: record.cid)
+        let reference = ComAtprotoLexicon.Repository.StrongReference(
+            recordURI: record.uri, cidHash: record.cid)
         let embedRecord = AppBskyLexicon.Embed.RecordDefinition(record: reference)
 
         return .record(embedRecord)
     }
-    
+
     /// Represents the different types of content that can be embedded in a post record.
-    ///  
+    ///
     /// `EmbedIdentifier` provides a unified interface for specifying embeddable content,
     /// simplifying the process of attaching images, external links, other post records, or media
     /// to a post. By abstracting the details of each embed type, it allows methods like
@@ -752,7 +781,9 @@ extension ATProtoBluesky {
         ///   - captions: An array of captions for the video. Optional.
         ///   - altText: The alt text for the video. Optional.
         ///   - aspectRatio: The aspect ratio of the video. Optional.
-        case video(video: Data, captions: [Caption]? = nil, altText: String? = nil, aspectoRatio: AppBskyLexicon.Embed.AspectRatioDefinition? = nil)
+        case video(
+            video: Data, captions: [Caption]? = nil, altText: String? = nil,
+            aspectoRatio: AppBskyLexicon.Embed.AspectRatioDefinition? = nil)
 
         /// Represents an external link to be embedded in the post.
         ///
@@ -774,7 +805,9 @@ extension ATProtoBluesky {
         /// - Parameters:
         ///   - record: An `EmbedRecord`, representing the post to be embedded.
         ///   - media: A `MediaUnion`, representing the media content associated with the post.
-        case recordWithMedia(record: AppBskyLexicon.Embed.RecordDefinition, media: AppBskyLexicon.Embed.RecordWithMediaDefinition.MediaUnion)
+        case recordWithMedia(
+            record: AppBskyLexicon.Embed.RecordDefinition,
+            media: AppBskyLexicon.Embed.RecordWithMediaDefinition.MediaUnion)
     }
 
     // MARK: Helper methods -
@@ -796,8 +829,9 @@ extension ATProtoBluesky {
         for facet in facets {
             // There will always only be one item in the array.
             if let linkFeature = facet.features.first,
-               case let .link(link) = linkFeature,
-               let url = URL(string: link.uri) {
+                case let .link(link) = linkFeature,
+                let url = URL(string: link.uri)
+            {
                 // Attempt to grab metadata using the link builder
                 return try await linkbuilder.grabMetadata(from: url)
             }

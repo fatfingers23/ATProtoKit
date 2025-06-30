@@ -489,10 +489,10 @@ public enum UnknownType: Sendable, Codable {
             case .record(let record):
                 try container.encode(record)
             case .unknown(let unknownData):
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = [.prettyPrinted]
-                let jsonData = try encoder.encode(unknownData)
-                try container.encode(jsonData)
+//                let encoder = JSONEncoder()
+//                encoder.outputFormatting = [.prettyPrinted]
+//                let jsonData = try encoder.encode(unknownData)
+                try container.encode(unknownData)
         }
     }
 

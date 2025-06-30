@@ -1,8 +1,9 @@
 import Foundation
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
 import Logging
+
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
 
 /// Defines a protocol for configurations in the `ATProtoKit` API library.
 ///
@@ -344,7 +345,9 @@ public final class ATProtoBlueskyChat: Sendable, ATProtoKitConfiguration {
         self.atProtoKitInstance = atProtoKitInstance
         self.sessionConfiguration = atProtoKitInstance.sessionConfiguration
         self.pdsURL = "https://api.bsky.chat"
-        self.userSessionRegistry = userSessionRegistry ?? InMemoryUserSessionRegistry.shared
+        self.userSessionRegistry =
+            self.sessionConfiguration?.userSessionRegistry ?? InMemoryUserSessionRegistry()
+
     }
 }
 

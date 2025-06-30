@@ -6,14 +6,15 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 extension ATProtoKit {
 
     /// Creates a record attached to a user account.
-    ///  
+    ///
     /// - Warning: If you're using a lexicon that's not made by `com.atproto` or `app.bsky`,
     /// make sure you set `shouldValidate` to `false`. Failure to do so will result in an error
     /// that the lexicon isn't found.
@@ -47,17 +48,19 @@ extension ATProtoKit {
         swapCommit: String? = nil
     ) async throws -> ComAtprotoLexicon.Repository.StrongReference {
         guard let session = try await self.getUserSession(),
-              let keychain = sessionConfiguration?.keychainProtocol else {
+            let keychain = sessionConfiguration?.keychainProtocol
+        else {
             throw ATRequestPrepareError.missingActiveSession
         }
 
         let accessToken = try await keychain.retrieveAccessToken()
         let sessionURL = session.serviceEndpoint.absoluteString
 
-        guard let requestURL = URL(string: "\(sessionURL)/xrpc/com.atproto.repo.createRecord") else {
+        guard let requestURL = URL(string: "\(sessionURL)/xrpc/com.atproto.repo.createRecord")
+        else {
             throw ATRequestPrepareError.invalidRequestURL
         }
-        
+
         let requestBody = ComAtprotoLexicon.Repository.CreateRecordRequestBody(
             repositoryDID: repositoryDID,
             collection: collection,
@@ -68,6 +71,7 @@ extension ATProtoKit {
         )
 
         do {
+
             let request = apiClientService.createRequest(
                 forRequest: requestURL,
                 andMethod: .post,
