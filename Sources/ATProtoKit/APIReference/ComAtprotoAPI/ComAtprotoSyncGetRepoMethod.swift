@@ -6,14 +6,15 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 extension ATProtoKit {
 
     /// Gets a repository in a .car format.
-    /// 
+    ///
     /// - Note: According to the AT Protocol specifications: "Download a repository export as
     /// CAR file. Optionally only a 'diff' since a previous revision. Does not require auth;
     /// implemented by PDS."
@@ -33,7 +34,8 @@ extension ATProtoKit {
         by did: String,
         sinceRevision: String? = nil
     ) async throws -> Data {
-        guard let requestURL = URL(string: "https://bsky.network/xrpc/com.atproto.sync.getRepo") else {
+        let urlBase = self.sessionConfiguration?.pdsURL ?? "https://bsky.network"
+        guard let requestURL = URL(string: "\(urlBase)/xrpc/com.atproto.sync.getRepo") else {
             throw ATRequestPrepareError.invalidRequestURL
         }
 

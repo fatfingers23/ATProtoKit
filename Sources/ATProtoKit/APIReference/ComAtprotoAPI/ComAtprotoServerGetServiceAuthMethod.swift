@@ -6,14 +6,15 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 extension ATProtoKit {
 
     /// Retrieves a token from a requested service.
-    /// 
+    ///
     /// - Note: According to the AT Protocol specifications: "Get a signed token on behalf of
     /// the requesting DID for the requested service."
     ///
@@ -37,14 +38,16 @@ extension ATProtoKit {
         lexiconMethod: String? = nil
     ) async throws -> ComAtprotoLexicon.Server.GetServiceAuthOutput {
         guard let session = try await self.getUserSession(),
-              let keychain = sessionConfiguration?.keychainProtocol else {
+            let keychain = sessionConfiguration?.keychainProtocol
+        else {
             throw ATRequestPrepareError.missingActiveSession
         }
 
         let accessToken = try await keychain.retrieveAccessToken()
         let sessionURL = session.serviceEndpoint.absoluteString
 
-        guard let requestURL = URL(string: "\(sessionURL)/xrpc/com.atproto.server.getServiceAuth") else {
+        guard let requestURL = URL(string: "\(sessionURL)/xrpc/com.atproto.server.getServiceAuth")
+        else {
             throw ATRequestPrepareError.invalidRequestURL
         }
 
@@ -53,7 +56,7 @@ extension ATProtoKit {
         ]
 
         if let expirationTime {
-            queryItems.append(("exp", "\(Int(Date().timeIntervalSince1970) + expirationTime)"))
+            queryItems.append(("exp", "\(expirationTime)"))
         }
 
         if let lexiconMethod {

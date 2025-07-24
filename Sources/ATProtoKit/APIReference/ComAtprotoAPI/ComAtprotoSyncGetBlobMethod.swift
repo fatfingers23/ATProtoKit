@@ -6,20 +6,21 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 extension ATProtoKit {
 
     /// Retrieves a blob from a given record.
-    /// 
+    ///
     /// - Note: According to the AT Protocol specifications: "Get a blob associated with a given
     /// account. Returns the full blob as originally uploaded. Does not require auth; implemented
     /// by PDS."
-    /// 
+    ///
     /// - SeeAlso: This is based on the [`com.atproto.sync.getBlob`][github] lexicon.
-    /// 
+    ///
     /// [github]: https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/sync/getBlob.json
     ///
     /// - Parameters:
@@ -33,13 +34,14 @@ extension ATProtoKit {
         from accountDID: String,
         cid: String
     ) async throws -> Data {
-        guard let requestURL = URL(string: "https://bsky.network/xrpc/com.atproto.sync.getBlob") else {
+        let baseUrl = self.sessionConfiguration?.pdsURL ?? "https://bsky.network"
+        guard let requestURL = URL(string: "\(baseUrl)/xrpc/com.atproto.sync.getBlob") else {
             throw ATRequestPrepareError.invalidRequestURL
         }
 
         let queryItems = [
             ("did", accountDID),
-            ("cid", cid)
+            ("cid", cid),
         ]
 
         let queryURL: URL
@@ -58,10 +60,11 @@ extension ATProtoKit {
                 authorizationValue: nil
             )
             let response = try await apiClientService.sendRequest(request)
-
+            
             return response
         } catch {
             throw error
         }
     }
+
 }

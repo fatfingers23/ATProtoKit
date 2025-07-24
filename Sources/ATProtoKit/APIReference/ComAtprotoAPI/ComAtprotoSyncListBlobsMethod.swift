@@ -6,14 +6,15 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 extension ATProtoKit {
 
     /// Lists a user account's blob CID hashes.
-    /// 
+    ///
     /// - Note: According to the AT Protocol specifications: "List blob CIDs for an account,
     /// since some repo revision. Does not require auth; implemented by PDS."
     ///
@@ -38,7 +39,8 @@ extension ATProtoKit {
         limit: Int? = 500,
         cursor: String? = nil
     ) async throws -> ComAtprotoLexicon.Sync.ListBlobsOutput {
-        guard let requestURL = URL(string: "https://bsky.network/xrpc/com.atproto.sync.listBlobs") else {
+        let baseUrl = self.sessionConfiguration?.pdsURL ?? "https://bsky.network"
+        guard let requestURL = URL(string: "\(baseUrl)/xrpc/com.atproto.sync.listBlobs") else {
             throw ATRequestPrepareError.invalidRequestURL
         }
 

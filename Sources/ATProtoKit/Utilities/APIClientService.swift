@@ -6,8 +6,9 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 /// A struct which handle the most common HTTP requests for the AT Protocol.
@@ -28,43 +29,45 @@ public struct APIClientService: Sendable {
     /// The `UserAgent` instance to identify all network requests originating from the `ATProtoKit` sdk
     public static let userAgent: String = {
         let info = Bundle.main.infoDictionary
-        let executable = (info?["CFBundleExecutable"] as? String) ??
-            (ProcessInfo.processInfo.arguments.first?.split(separator: "/").last.map(String.init)) ??
-            "Unknown"
+        let executable =
+            (info?["CFBundleExecutable"] as? String)
+            ?? (ProcessInfo.processInfo.arguments.first?.split(separator: "/").last.map(String.init))
+            ?? "Unknown"
         let bundle = info?["CFBundleIdentifier"] as? String ?? "Unknown"
         let appVersion = info?["CFBundleShortVersionString"] as? String ?? "Unknown"
         let appBuild = info?["CFBundleVersion"] as? String ?? "Unknown"
 
         let osNameVersion: String = {
             let version = ProcessInfo.processInfo.operatingSystemVersion
-            let versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+            let versionString =
+                "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
             let osName: String = {
                 #if os(iOS)
-                #if targetEnvironment(macCatalyst)
-                return "macOS(Catalyst)"
-                #else
-                return "iOS"
-                #endif
+                    #if targetEnvironment(macCatalyst)
+                        return "macOS(Catalyst)"
+                    #else
+                        return "iOS"
+                    #endif
                 #elseif os(watchOS)
-                return "watchOS"
+                    return "watchOS"
                 #elseif os(tvOS)
-                return "tvOS"
+                    return "tvOS"
                 #elseif os(macOS)
-                #if targetEnvironment(macCatalyst)
-                return "macOS(Catalyst)"
-                #else
-                return "macOS"
-                #endif
+                    #if targetEnvironment(macCatalyst)
+                        return "macOS(Catalyst)"
+                    #else
+                        return "macOS"
+                    #endif
                 #elseif swift(>=5.9.2) && os(visionOS)
-                return "visionOS"
+                    return "visionOS"
                 #elseif os(Linux)
-                return "Linux"
+                    return "Linux"
                 #elseif os(Windows)
-                return "Windows"
+                    return "Windows"
                 #elseif os(Android)
-                return "Android"
+                    return "Android"
                 #else
-                return "Unknown"
+                    return "Unknown"
                 #endif
             }()
 
@@ -75,7 +78,8 @@ public struct APIClientService: Sendable {
         ///  To get truly accurate version would need to read from Package.resolved and I haven't found a way to do so
         let atProtoVersion = "ATProtoKit/0.21.0"
 
-        let userAgent = "\(executable)/\(appVersion) (\(bundle); build:\(appBuild); \(osNameVersion)) \(atProtoVersion)"
+        let userAgent =
+            "\(executable)/\(appVersion) (\(bundle); build:\(appBuild); \(osNameVersion)) \(atProtoVersion)"
 
         return userAgent
     }()
@@ -96,12 +100,14 @@ public struct APIClientService: Sendable {
     public init(with configuration: APIClientConfiguration) {
         let config = configuration.urlSessionConfiguration ?? .default
         config.httpAdditionalHeaders = ["User-Agent": APIClientService.userAgent]
-        self.urlSession = URLSession(configuration: config, delegate: configuration.delegate, delegateQueue: configuration.delegateQueue)
+        self.urlSession = URLSession(
+            configuration: config, delegate: configuration.delegate,
+            delegateQueue: configuration.delegateQueue)
         self.executor = configuration.responseProvider
         self.logger = configuration.logger
     }
 
-// MARK: Creating requests -
+    // MARK: Creating requests -
     /// Creates a `URLRequest` with specified parameters.
     ///
     /// - Parameters:
@@ -115,9 +121,12 @@ public struct APIClientService: Sendable {
     ///   - isRelatedToBskyChat: Indicates whether to use the "atproto-proxy" header for
     ///   the value specific to Bluesky DMs. Optional. Defaults to `false`.
     /// - Returns: A configured `URLRequest` instance.
-    public func createRequest(forRequest requestURL: URL, andMethod httpMethod: HTTPMethod, acceptValue: String? = "application/json",
-                                     contentTypeValue: String? = "application/json", authorizationValue: String? = nil,
-                                     labelersValue: String? = nil, proxyValue: String? = nil, isRelatedToBskyChat: Bool = false) -> URLRequest {
+    public func createRequest(
+        forRequest requestURL: URL, andMethod httpMethod: HTTPMethod,
+        acceptValue: String? = "application/json",
+        contentTypeValue: String? = "application/json", authorizationValue: String? = nil,
+        labelersValue: String? = nil, proxyValue: String? = nil, isRelatedToBskyChat: Bool = false
+    ) -> URLRequest {
         var request = URLRequest(url: requestURL)
         request.httpMethod = httpMethod.rawValue
 
@@ -165,7 +174,9 @@ public struct APIClientService: Sendable {
     ///   - requestURL: The base URL to append query items to.
     ///   - queryItems: An array of key-value pairs to be set as query items.
     /// - Returns: A new URL with the query items appended.
-    public func setQueryItems(for requestURL: URL, with queryItems: [(String, String)]) throws -> URL {
+    public func setQueryItems(for requestURL: URL, with queryItems: [(String, String)]) throws
+        -> URL
+    {
         var components = URLComponents(url: requestURL, resolvingAgainstBaseURL: true)
 
         // Map out each URLQueryItem with the key ($0.0) and value ($0.1) of the item.
@@ -178,7 +189,7 @@ public struct APIClientService: Sendable {
         return finalURL
     }
 
-// MARK: Sending requests -
+    // MARK: Sending requests -
     /// Sends a `URLRequest` and decodes the response to a specified `Decodable` type.
     ///
     /// - Parameters:
@@ -186,7 +197,10 @@ public struct APIClientService: Sendable {
     ///   - body: An optional `Encodable` body to be encoded and attached to the request.
     ///   - decodeTo: The type to decode the response into.
     /// - Returns: An instance of the specified `Decodable` type.
-    public func sendRequest<T: Decodable>(_ request: URLRequest, withEncodingBody body: (Encodable & Sendable)? = nil, decodeTo: T.Type) async throws -> T {
+    public func sendRequest<T: Decodable>(
+        _ request: URLRequest, withEncodingBody body: (Encodable & Sendable)? = nil,
+        decodeTo: T.Type
+    ) async throws -> T {
         let data = try await self.performRequest(request, withEncodingBody: body)
 
         let decodedData = try JSONDecoder().decode(T.self, from: data)
@@ -206,7 +220,9 @@ public struct APIClientService: Sendable {
     ///   - request: The `URLRequest` to send.
     ///   - body: An optional `Encodable` body to be encoded and attached to the request.
     /// - Returns: A `Data` object that contains the blob.
-    public func sendRequest(_ request: URLRequest, withEncodingBody body: (Encodable & Sendable)? = nil) async throws -> Data {
+    public func sendRequest(
+        _ request: URLRequest, withEncodingBody body: (Encodable & Sendable)? = nil
+    ) async throws -> Data {
         let data = try await self.performRequest(request, withEncodingBody: body)
         return data
     }
@@ -218,7 +234,9 @@ public struct APIClientService: Sendable {
     ///   - data: The file object itself.
     ///   - decodeTo: The type to decode the response into.
     /// - Returns: An instance of the specified `Decodable` type.
-    public func sendRequest<T: Decodable>(_ request: URLRequest, withDataBody data: Data, decodeTo: T.Type) async throws -> T {
+    public func sendRequest<T: Decodable>(
+        _ request: URLRequest, withDataBody data: Data, decodeTo: T.Type
+    ) async throws -> T {
         let urlRequest = request
 
         // let (data, response) = try await
@@ -244,7 +262,9 @@ public struct APIClientService: Sendable {
     ///   - request: The `URLRequest` to send.
     ///   - body: An optional `Encodable` body to be encoded and attached to the request.
     /// - Returns: A tuple containing the data and the HTTPURLResponse.
-    private func performRequest(_ request: URLRequest, withEncodingBody body: (Encodable & Sendable)? = nil) async throws -> Data {
+    private func performRequest(
+        _ request: URLRequest, withEncodingBody body: (Encodable & Sendable)? = nil
+    ) async throws -> Data {
         // Wait for ATRecordTypeRegistry to be ready before proceeding
         await ATRecordTypeRegistry.shared.waitUntilRegistryIsRead()
 
@@ -261,7 +281,7 @@ public struct APIClientService: Sendable {
         }
 
         #if DEBUG
-        self.logger?.logRequest(urlRequest, body: httpBodyData)
+            self.logger?.logRequest(urlRequest, body: httpBodyData)
         #endif
 
         do {
@@ -273,129 +293,148 @@ public struct APIClientService: Sendable {
             }
 
             #if DEBUG
-            self.logger?.logResponse(response, data: data, error: nil)
+                self.logger?.logResponse(response, data: data, error: nil)
             #endif
-            
+
             if let httpResponse = response as? HTTPURLResponse {
                 switch httpResponse.statusCode {
                     case 200:
+                        let header = response.mimeType
                         return data
                     case 400:
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATAPIError.badRequest(error: errorResponse)
                     case 401:
-                        let wwwAuthenticateHeader = httpResponse.allHeaderFields["WWW-Authenticate"] as? String
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let wwwAuthenticateHeader =
+                            httpResponse.allHeaderFields["WWW-Authenticate"] as? String
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
-                        throw ATAPIError.unauthorized(error: errorResponse, wwwAuthenticate: wwwAuthenticateHeader)
+                        throw ATAPIError.unauthorized(
+                            error: errorResponse, wwwAuthenticate: wwwAuthenticateHeader)
                     case 403:
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATAPIError.forbidden(error: errorResponse)
                     case 404:
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATAPIError.notFound(error: errorResponse)
                     case 409:
-                        let errorResponse = try JSONDecoder().decode(AppBskyLexicon.Video.JobStatusDefinition.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            AppBskyLexicon.Video.JobStatusDefinition.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATJobStatusError.failedJob(error: errorResponse)
                     case 413:
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATAPIError.payloadTooLarge(error: errorResponse)
                     case 429:
-                        let retryAfterValue: TimeInterval? = if let retryAfterHeader = httpResponse.allHeaderFields["ratelimit-reset"] as? String {
-                            TimeInterval(retryAfterHeader)
-                        } else {
-                            nil
-                        }
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let retryAfterValue: TimeInterval? =
+                            if let retryAfterHeader = httpResponse.allHeaderFields[
+                                "ratelimit-reset"] as? String
+                            {
+                                TimeInterval(retryAfterHeader)
+                            } else {
+                                nil
+                            }
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
-                        throw ATAPIError.tooManyRequests(error: errorResponse, retryAfter: retryAfterValue)
+                        throw ATAPIError.tooManyRequests(
+                            error: errorResponse, retryAfter: retryAfterValue)
                     case 500:
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATAPIError.internalServerError(error: errorResponse)
                     case 501:
-                        let errorResponse = try JSONDecoder().decode(ATHTTPResponseError.self, from: data)
+                        let errorResponse = try JSONDecoder().decode(
+                            ATHTTPResponseError.self, from: data)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: errorResponse)
+                            self.logger?.logResponse(nil, data: nil, error: errorResponse)
                         #endif
                         throw ATAPIError.methodNotImplemented(error: errorResponse)
                     case 502:
                         let error = ATAPIError.badGateway
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: error)
+                            self.logger?.logResponse(nil, data: nil, error: error)
                         #endif
                         throw error
                     case 503:
                         let error = ATAPIError.serviceUnavailable
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: error)
+                            self.logger?.logResponse(nil, data: nil, error: error)
                         #endif
                         throw error
                     case 504:
                         let error = ATAPIError.gatewayTimeout
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: error)
+                            self.logger?.logResponse(nil, data: nil, error: error)
                         #endif
                         throw error
                     default:
-                        let errorResponse = String(data: data, encoding: .utf8) ?? "No response body"
+                        let errorResponse =
+                            String(data: data, encoding: .utf8) ?? "No response body"
                         let errorCode = httpResponse.statusCode
                         let httpHeaders = httpResponse.allHeaderFields as? [String: String] ?? [:]
-                        let error = ATAPIError.unknown(error: errorResponse, errorCode: errorCode, errorData: data, httpHeaders: httpHeaders)
+                        let error = ATAPIError.unknown(
+                            error: errorResponse, errorCode: errorCode, errorData: data,
+                            httpHeaders: httpHeaders)
 
                         #if DEBUG
-                        self.logger?.logResponse(nil, data: nil, error: error)
+                            self.logger?.logResponse(nil, data: nil, error: error)
                         #endif
                         throw error
                 }
             } else {
                 #if DEBUG
-                self.logger?.logResponse(nil, data: nil, error: URLError(.badServerResponse))
+                    self.logger?.logResponse(nil, data: nil, error: URLError(.badServerResponse))
                 #endif
                 throw URLError(.badServerResponse)
             }
         } catch {
             #if DEBUG
-            self.logger?.logResponse(nil, data: nil, error: error)
+                self.logger?.logResponse(nil, data: nil, error: error)
             #endif
             throw error
         }
     }
 
-// MARK: -
+    // MARK: -
     /// Represents the HTTP methods used to interact with the AT Protocol.
     public enum HTTPMethod: String {
         /// Retrieve information from the AT Protocol using a given URI.
@@ -408,12 +447,12 @@ public struct APIClientService: Sendable {
         case delete = "DELETE"
     }
 
-//    ///
-//    public enum ATProtoProxy: String {
-//
-//        case bskyChat = "did:web:api.bsky.chat#bsky_chat"
-//        case test = ""
-//    }
+    //    ///
+    //    public enum ATProtoProxy: String {
+    //
+    //        case bskyChat = "did:web:api.bsky.chat#bsky_chat"
+    //        case test = ""
+    //    }
 
     /// Determines the MIME type based on a file's extension.
     ///
